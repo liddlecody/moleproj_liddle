@@ -44,10 +44,10 @@ for filename in os.listdir(input_dir):
             transformed_img.save(os.path.join(output_dir, filename))
 
             # Optionally, apply augmentation and save augmented images
-            aug_img = augmentation(img)
+            '''aug_img = augmentation(img)
             aug_img = transforms.ToPILImage()(aug_img)
             aug_filename = f"aug_{filename}"
-            aug_img.save(os.path.join(output_dir, aug_filename))
+            aug_img.save(os.path.join(output_dir, aug_filename))'''
 
             print(f"Processed and saved {filename}")
         except Exception as e:
