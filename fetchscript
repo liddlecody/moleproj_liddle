@@ -1,0 +1,52 @@
+import requests
+import pandas as pd
+import os
+
+# Define the correct base URL for the ISIC API
+base_url = "https://api.isic-archive.com/api/v2/images/"
+
+# Fetch metadata for the first 10 images as a sample
+response = requests.get(base_url + "?limit=10")
+
+# Check if the request was successful
+if response.status_code == 200:
+    images_metadata = response.json()
+else:
+    print(f"Failed to retrieve data: {response.status_code}")
+    images_metadata = {}
+
+# Extract relevant information from the metadata
+data = []
+for image in images_metadata.get('results', []):
+    try:
+        # Extract the required metadata
+        diagnosis = image['metadata']['clinical'].get('benign_malignant', 'unknown')
+        if diagnosis in ['benign', 'malignant']:
+            data.append({
+                'image_id': image['isic_id'],
+                'diagnosis': diagnosis,
+                'url': image['files']['full']['url']
+            })
+    except KeyError:
+        continue
+
+# Convert the data into a pandas DataFrame
+df = pd.DataFrame(data)
+
+# Display the first few rows to ensure the data looks correct
+print(df.head())
+
+# Define the output directory for images
+output_dir = "isic_images"
+os.makedirs(output_dir, exist_ok=True)
+
+# Download the images
+for index, row in df.iterrows():
+    response = requests.get(row['url'])
+    if response.status_code == 200:
+        with open(f"{output_dir}/{row['diagnosis']}_{row['image_id']}.jpg", 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded {row['diagnosis']}_{row['image_id']}.jpg")
+    else:
+        print(f"Failed to download image {row['image_id']}")
+
