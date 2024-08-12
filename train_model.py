@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 import os
 
 def main():
-    # Your training code here
     data_dir = "processed_images"
     model_dir = "models"
     os.makedirs(model_dir, exist_ok=True)
