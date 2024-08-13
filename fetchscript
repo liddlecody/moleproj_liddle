@@ -1,14 +1,14 @@
 import requests
 import pandas as pd
 import os
+from time import sleep
 
 # Define the correct base URL for the ISIC API
 base_url = "https://api.isic-archive.com/api/v2/images/"
 
 # Set up parameters
-limit = 100
-download_count = 1000  # Target number of images to download
-
+limit = 100  # Increase the limit to reduce the number of API calls
+download_count = 5000  # Target number of images to download
 # Directory for storing images
 output_dir = "isic_images"
 os.makedirs(output_dir, exist_ok=True)
@@ -17,43 +17,52 @@ data = []
 next_url = base_url + f"?limit={limit}"
 
 while next_url and len(data) < download_count:
-    response = requests.get(next_url)
-    
-    if response.status_code == 200:
-        images_metadata = response.json()
-        
-        for image in images_metadata.get('results', []):
-            if len(data) >= download_count:
-                break
-
-            try:
-                # Extract the required metadata
-                diagnosis = image['metadata']['clinical'].get('benign_malignant', 'unknown')
-                if diagnosis in ['benign', 'malignant']:
-                    data.append({
-                        'image_id': image['isic_id'],
-                        'diagnosis': diagnosis,
-                        'url': image['files']['full']['url']
-                    })
-            except KeyError:
-                continue
-
-        # Check for pagination (next page URL)
-        next_url = images_metadata.get('next', None)
-    else:
-        print(f"Failed to retrieve data: {response.status_code}")
+    try:
+        response = requests.get(next_url, timeout=10)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to retrieve data: {e}")
         break
+    
+    images_metadata = response.json()
+    
+    for image in images_metadata.get('results', []):
+        if len(data) >= download_count:
+            break
+
+        try:
+            # Extract the required metadata
+            diagnosis = image['metadata']['clinical'].get('benign_malignant', 'unknown')
+            if diagnosis in ['benign', 'malignant']:
+                data.append({
+                    'image_id': image['isic_id'],
+                    'diagnosis': diagnosis,
+                    'url': image['files']['full']['url']
+                })
+        except KeyError:
+            continue
+
+    # Check for pagination (next page URL)
+    next_url = images_metadata.get('next', None)
 
 # Convert the data into a pandas DataFrame
 df = pd.DataFrame(data)
 
 # Download the images
 for index, row in df.iterrows():
-    response = requests.get(row['url'])
-    if response.status_code == 200:
-        with open(f"{output_dir}/{row['diagnosis']}_{row['image_id']}.jpg", 'wb') as f:
-            f.write(response.content)
-        print(f"Downloaded {row['diagnosis']}_{row['image_id']}.jpg")
-    else:
-        print(f"Failed to download image {row['image_id']}")
+    filename = f"{output_dir}/{row['diagnosis']}_{row['image_id']}.jpg"
+    
+    # Skip if file already exists
+    if os.path.exists(filename):
+        print(f"Skipping {filename}, already exists.")
+        continue
 
+    try:
+        response = requests.get(row['url'], timeout=10)
+        response.raise_for_status()
+        with open(filename, 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded {filename}")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to download image {row['image_id']}: {e}")
+        sleep(1)  # Sleep for a second before trying the next image
