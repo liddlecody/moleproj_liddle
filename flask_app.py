@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from torchvision import models, transforms
 from PIL import Image
 import io
@@ -37,22 +39,18 @@ def predict():
         return jsonify({'error': 'No file provided'}), 400
 
     file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-
-    img_bytes = file.read()
-    image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
-
-
-    input_tensor = transform(image).unsqueeze(0)
+    img = Image.open(file.stream)
+    img = transform(img).unsqueeze(0)  
 
     with torch.no_grad():
-        output = model(input_tensor)
-        _, predicted = torch.max(output, 1)
-        prediction = class_names[predicted.item()]
+        outputs = model(img)
+        probabilities = F.softmax(outputs, dim=1)
+        confidence, predicted_class = torch.max(probabilities, 1)
+        
+        prediction = 'benign' if predicted_class.item() == 0 else 'malignant'
+        confidence_score = confidence.item()
 
-    return jsonify({'prediction': prediction})
+    return jsonify({'prediction': prediction, 'confidence': confidence_score})
 
 if __name__ == '__main__':
     app.run(debug=True)
