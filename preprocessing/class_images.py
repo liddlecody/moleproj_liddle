@@ -13,7 +13,7 @@ for class_name in class_names:
     os.makedirs(os.path.join(train_dir, class_name), exist_ok=True)
     os.makedirs(os.path.join(val_dir, class_name), exist_ok=True)
 
-#move images to the appropriate class folder
+
 def move_images_to_class_folders(source_dir, class_names):
     for filename in os.listdir(source_dir):
         if filename.endswith(".jpg"): 
