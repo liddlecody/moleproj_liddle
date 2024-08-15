@@ -18,6 +18,7 @@ The preprocessing pipeline includes:
 Model Training
 Model Architecture
 The project uses the ResNet-18 architecture, pretrained on ImageNet, with a custom fully connected layer for binary classification (benign vs. malignant).
+Script used to train Final Model is 'test_autoaug.py'
 
 Optimization Techniques
 The following techniques were employed to optimize model performance:

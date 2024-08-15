@@ -3,13 +3,11 @@ import pandas as pd
 import os
 from time import sleep
 
-# Define the correct base URL for the ISIC API
 base_url = "https://api.isic-archive.com/api/v2/images/"
 
-# Set up parameters
-limit = 100  # Increase the limit to reduce the number of API calls
-download_count = 5000  # Target number of images to download
-# Directory for storing images
+
+limit = 100  
+download_count = 5000  
 output_dir = "isic_images"
 os.makedirs(output_dir, exist_ok=True)
 
@@ -31,7 +29,6 @@ while next_url and len(data) < download_count:
             break
 
         try:
-            # Extract the required metadata
             diagnosis = image['metadata']['clinical'].get('benign_malignant', 'unknown')
             if diagnosis in ['benign', 'malignant']:
                 data.append({
@@ -42,17 +39,17 @@ while next_url and len(data) < download_count:
         except KeyError:
             continue
 
-    # Check for pagination (next page URL)
+
     next_url = images_metadata.get('next', None)
 
-# Convert the data into a pandas DataFrame
+
 df = pd.DataFrame(data)
 
-# Download the images
+
 for index, row in df.iterrows():
     filename = f"{output_dir}/{row['diagnosis']}_{row['image_id']}.jpg"
     
-    # Skip if file already exists
+
     if os.path.exists(filename):
         print(f"Skipping {filename}, already exists.")
         continue
@@ -65,4 +62,4 @@ for index, row in df.iterrows():
         print(f"Downloaded {filename}")
     except requests.exceptions.RequestException as e:
         print(f"Failed to download image {row['image_id']}: {e}")
-        sleep(1)  # Sleep for a second before trying the next image
+        sleep(1) 
