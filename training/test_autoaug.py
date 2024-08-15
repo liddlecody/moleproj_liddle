@@ -10,7 +10,7 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    best_learning_rate = 0.001
+    best_learning_rate = 0.002
     best_batch_size = 16
     best_optimizer = 'SGD'
     best_dropout_rate = 0.3
