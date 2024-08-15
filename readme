@@ -1,0 +1,41 @@
+Mole Classification Project
+Overview
+This project aims to develop a deep learning model to classify images of skin moles into benign or malignant categories. The project includes data preprocessing, model training with various optimization techniques, deployment through a Flask API, and a user-friendly interface for predicting the classification of new images.
+
+Data Collection
+I sourced the dataset used in this projectfrom the ISIC Archive, which contains a diverse set of labeled images of skin moles. The images are labeled as either benign or malignant.
+
+Fetching the Data
+I collected the images using the ISIC API, filtered by diagnosis. Preprocessing steps include resizing, normalization, and augmentation (using AutoAugment).
+
+Preprocessing
+The preprocessing pipeline includes:
+
+-Resizing images to 224x224 pixels.
+-Normalizing images based on ImageNet values.
+-Data augmentation using AutoAugment.
+
+Model Training
+Model Architecture
+The project uses the ResNet-18 architecture, pretrained on ImageNet, with a custom fully connected layer for binary classification (benign vs. malignant).
+
+Optimization Techniques
+The following techniques were employed to optimize model performance:
+
+-Learning Rate Scheduling: A learning rate scheduler was used to adapt the learning rate during training, which helps in converging faster and avoiding local minima.
+-Data Augmentation: AutoAugment was used to improve generalization by applying a set of transformations to the training data.
+-Dropout and L2 Regularization: These techniques were used to mitigate overfitting.
+
+Training Process
+The model was trained orgininally on a dataset of 1000 images, and had a base validation accuracy of ~78-80%. To increase model performance, a grid search was conducted to find the
+optimal hyperparameters (best_learning_rate = 0.01 best_batch_size = 32 best_optimizer = 'SGD' best_dropout_rate = 0.5). After training the model on these hyperparameters, performance jumped ~12-14% to 89-92% accuracy, however due to the smaller dataset and high training accuracy (99%) in conjuction with poor performance on unseen images, performance was indicative of overfitting. To combat this, I implemented L2 regularization to combat overfitting by penalizing large weights, helping the model to generalize better and prevent it from memorizing the training data. Performance stabilized at around 83-85% percent which was reflected in tests on unseen datasets as well. Still not happy with overall performance even though overfitting had been curbed, I expanded the dataset of images to 5000. With the performance of previous parameters dropping to ~60%, as the higher learning rate was evidently casing the model to coverge too quickly. I conducted another grid search to find the optimal hyperparams for this new data set. The search concluded (best_learning_rate = 0.002 best_batch_size = 16 best_optimizer = 'SGD' best_dropout_rate = 0.5). The changes were mostly as anticipated for a larger dataset, and performance jumped back up to ~85%, however in later epochs training accuracy was once again indicative of overfitting. In an effort to curb this again I implemented learning rate scheduling with step decay, and after tuning I found decaying every 7 steps with a gamma value of .1 was most effective. Performance after these changes was not as anticipated, as the model plateaued at ~78% val acc. This may have been due to the model converging to a suboptimal solution too early, as a result of the regularization overconstraining the model. In an effort to address the root cause of overfitting, I employed the AutoAugment library to create more training examples, which proved to be ultimately beneficial as after tuning params I was able to achieve a training accuracy of 90-95% and a consistent validation accuracy of 89%. The final model used the second set of optomized hyperparameters (with dropout rate tuned to .3), learning rate scheduling, and I ended up dropping the L2 regularization as it proved more harmful to performance than effective in curbing overfitting.
+
+Deployment (Local)
+Flask API
+I developed a simple Flask API to serve the trained model for predictions. The API accepts images and returns predictions along with a confidence score.
+
+User Interface
+I created a Tkinter-based GUI, allowing users to drag and drop images for classification. The interface displays both the prediction and the confidence level.
+
+Future Plans
+Future plans for the project include creating a custom model from the ground up to better tailor the architecture to the specific needs of skin lesion classification. Additionally, I plan to develop a robust mobile application that can be deployed on a production scale, making the model accessible for real-world medical use, with features like advanced analytics and integration with healthcare systems to allow for early detection and prevention of skin cancer.
