@@ -35,7 +35,7 @@ Deployment (Local)
 Flask API
 I developed a simple Flask API to serve the trained model for predictions. The API accepts images and returns predictions along with a confidence score.
 Start the Flask API by running: python flask_app.py
-The API will be available at http://127.0.0.1:5000/predict.
+The API will be available at http://127.0.0.1:5000/predict
 
 User Interface
 I created a Tkinter-based GUI, allowing users to drag and drop images for classification. The interface displays both the prediction and the confidence level.
